@@ -15,9 +15,10 @@ class BlurSuite extends FunSuite {
     for (x <- 0 until 5; y <- 0 until 5)
       src(x, y) = rgba(x, y, x + y, math.abs(x - y))
 
-    for (x <- 0 until 5; y <- 0 until 5)
+    for (x <- 0 until 5; y <- 0 until 5){
       assert(boxBlurKernel(src, x, y, 0) === rgba(x, y, x + y, math.abs(x - y)),
         "boxBlurKernel(_,_,0) should be identity.")
+    }
   }
 
   test("boxBlurKernel should return the correct value on an interior pixel " +
