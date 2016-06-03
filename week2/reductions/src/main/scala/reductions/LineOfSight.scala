@@ -68,17 +68,21 @@ object LineOfSight {
    *  If the specified part of the array is longer than `threshold`, then the
    *  work is divided and done recursively in parallel.
    */
-  def upsweep(input: Array[Float], from: Int, end: Int,
-    threshold: Int): Tree = {
-    ???
+  def upsweep(input: Array[Float], from: Int, end: Int, threshold: Int): Tree = {
+    //println(s"from: $from to: $end total = ${end - from}")
+    if((end-from) < threshold) Leaf(from, end, upsweepSequential(input, from, end))
+    else {
+      val middle = from + (end-from)/2
+      val (lR, rR) = parallel(upsweep(input, from, middle, threshold), upsweep(input, middle, end, threshold))
+      Node(lR, rR)
+    }
   }
 
   /** Traverses the part of the `input` array starting at `from` and until
    *  `until`, and computes the maximum angle for each entry of the output array,
    *  given the `startingAngle`.
    */
-  def downsweepSequential(input: Array[Float], output: Array[Float],
-    startingAngle: Float, from: Int, until: Int): Unit = {
+  def downsweepSequential(input: Array[Float], output: Array[Float], startingAngle: Float, from: Int, until: Int): Unit = {
     output(from) = startingAngle
     for( i <- from+1 until until){
       output(i) = max( input(i)/i, output(i-1) )
@@ -89,14 +93,15 @@ object LineOfSight {
    *  reduction `tree` in parallel, and then calls `downsweepTraverse` to write
    *  the `output` angles.
    */
-  def downsweep(input: Array[Float], output: Array[Float], startingAngle: Float,
-    tree: Tree): Unit = {
-    ???
+  def downsweep(input: Array[Float], output: Array[Float], startingAngle: Float, tree: Tree): Unit = tree match {
+    case Leaf(f, t, m) => downsweepSequential(input, output, m, f, t)
+    case Node(l, r) => {
+      parallel(downsweep(input, output, startingAngle, l), downsweep(input, output, startingAngle, r))
+    }
   }
 
   /** Compute the line-of-sight in parallel. */
-  def parLineOfSight(input: Array[Float], output: Array[Float],
-    threshold: Int): Unit = {
-    ???
+  def parLineOfSight(input: Array[Float], output: Array[Float], threshold: Int): Unit = {
+    downsweep(input, output, 0, upsweep(input, 0, input.length, threshold))
   }
 }
