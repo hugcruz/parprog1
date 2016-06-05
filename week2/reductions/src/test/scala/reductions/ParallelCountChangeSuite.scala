@@ -62,6 +62,15 @@ class ParallelCountChangeSuite extends FunSuite {
     check(50, List(1, 2, 5, 10), 341)
     check(250, List(1, 2, 5, 10, 20, 50), 177863)
   }
+  
+  test("moneyThreshold") {
+    def check(money: Int, expected: Boolean) =
+      assert(moneyThreshold(3)(money,List(0)) == expected, s"moneyThreshold not working for $money")
+   
+    check(1, true);
+    check(2, true);
+    check(3, false);
+  }
 
 
 }
