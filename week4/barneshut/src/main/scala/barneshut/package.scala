@@ -169,8 +169,23 @@ package object barneshut {
     val matrix = new Array[ConcBuffer[Body]](sectorPrecision * sectorPrecision)
     for (i <- 0 until matrix.length) matrix(i) = new ConcBuffer
 
+    def trapX(value: Float): Float = {
+      if(value < boundaries.minX) boundaries.minX
+      else if(value > boundaries.maxX) boundaries.maxX
+      else value
+    }
+    
+    def trapY(value: Float): Float = {
+      if(value < boundaries.minY) boundaries.minY
+      else if(value > boundaries.maxY) boundaries.maxY
+      else value
+    }
+    
     def +=(b: Body): SectorMatrix = {
-      val sector = (Math.min(b.y, boundaries.maxY) / sectorSize).toInt * sectorPrecision + Math.min(b.x, boundaries.maxX) / sectorSize
+      val offsetY = if(boundaries.minY >= 0) 0 else boundaries.minY * -1 / sectorSize
+      val offsetX = if(boundaries.minX >= 0) 0 else boundaries.minX * -1 / sectorSize
+      
+      val sector = (trapY(b.y) / sectorSize + offsetY).toInt * sectorPrecision + trapX(b.x) / sectorSize + offsetX
       matrix(sector.toInt) += b
 
       this
@@ -179,7 +194,9 @@ package object barneshut {
     def apply(x: Int, y: Int) = matrix(y * sectorPrecision + x)
 
     def combine(that: SectorMatrix): SectorMatrix = {
-      ???
+      for (i <- 0 until matrix.length) matrix(i).combine(that.matrix(i))
+      
+      this
     }
 
     def toQuad(parallelism: Int): Quad = {
