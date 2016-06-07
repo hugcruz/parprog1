@@ -181,11 +181,20 @@ package object barneshut {
       else value
     }
     
-    def +=(b: Body): SectorMatrix = {
-      val offsetY = if(boundaries.minY >= 0) 0 else boundaries.minY * -1 / sectorSize
-      val offsetX = if(boundaries.minX >= 0) 0 else boundaries.minX * -1 / sectorSize
-      
-      val sector = (trapY(b.y) / sectorSize + offsetY).toInt * sectorPrecision + trapX(b.x) / sectorSize + offsetX
+    def normalize(value: Float, min: Float, max: Float): Float = {
+      (value - min)/(max-min)
+    }
+    
+    def normalizeX(value: Float): Float = {
+      normalize(value, boundaries.minX, boundaries.maxX) * sectorPrecision
+    }
+    
+    def normalizeY(value: Float): Float = {
+      normalize(value, boundaries.minY, boundaries.maxY) * sectorPrecision
+    }
+    
+    def +=(b: Body): SectorMatrix = {      
+      val sector = normalizeY(trapY(b.y)).toInt * sectorPrecision + normalizeX(trapX(b.x)).toInt
       matrix(sector.toInt) += b
 
       this
