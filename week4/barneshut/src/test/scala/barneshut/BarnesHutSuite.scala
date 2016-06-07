@@ -59,6 +59,21 @@ import FloatOps._
     assert(quad.total == 1, s"${quad.total} should be 1")
   }
 
+  test("Fork with 4 empty quadrants") {
+    val nw = Empty(17.5f, 27.5f, 5f)
+    val ne = Empty(22.5f, 27.5f, 5f)
+    val sw = Empty(17.5f, 32.5f, 5f)
+    val se = Empty(22.5f, 32.5f, 5f)
+    val quad = Fork(nw, ne, sw, se)
+
+    assert(quad.centerX == 20f, s"CenterX ${quad.centerX} should be 20f")
+    assert(quad.centerY == 30f, s"CenterY ${quad.centerY} should be 30f")
+    assert(quad.mass == 0f, s"${quad.mass} should be 0f")
+    assert(quad.massX == 20f, s"MassX ${quad.massX} should be 20f")
+    assert(quad.massY == 30f, s"MassY ${quad.massY} should be 30f")
+    assert(quad.total == 0, s"${quad.total} should be 0")
+  }
+
   test("Empty.insert(b) should return a Leaf with only that body") {
     val quad = Empty(51f, 46.3f, 5f)
     val b = new Body(3f, 54f, 46f, 0f, 0f)
@@ -97,6 +112,20 @@ import FloatOps._
     assert(body.yspeed ~= 0.015557117f)
   }
 
+  test("Fork with 2 empty quadrants and 2 leafs") {
+    val b1 = new Body(123f, 15f, 20f, 0f, 0f)
+    val b2 = new Body(524.5f, 15f, 20f, 0f, 0f)
+    val b3 = new Body(245f, 25f, 30f, 0f, 0f)
+
+    val nw = Leaf(17.5f, 27.5f, 5f, Seq(b1, b2))
+    val ne = Empty(22.5f, 27.5f, 5f)
+    val sw = Empty(17.5f, 32.5f, 5f)
+    val se = Leaf(22.5f, 32.5f, 5f, Seq(b3))
+    val quad = Fork(nw, ne, sw, se)
+
+    b3.updated(quad)
+  }
+
   // test cases for sector matrix
 
   test("'SectorMatrix.+=' should add a body at (25,47) to the correct bucket of a sector matrix of size 96") {
@@ -110,6 +139,23 @@ import FloatOps._
     sm += body
     val res = sm(2, 3).size == 1 && sm(2, 3).find(_ == body).isDefined
     assert(res, s"Body not found in the right sector")
+  }
+
+  test("SectorMatrix should combine correctly") {
+    val boundaries = new Boundaries()
+    boundaries.minX = 1
+    boundaries.minY = 1
+    boundaries.maxX = 97
+    boundaries.maxY = 97
+    val sm = new SectorMatrix(boundaries, SECTOR_PRECISION)
+    sm += new Body(5, 25, 47, 0.1f, 0.1f)
+    sm += new Body(5, 90, 47, 0.1f, 0.1f)
+
+    val sm2 = new SectorMatrix(boundaries, SECTOR_PRECISION)
+    sm2 += new Body(5, 55, 47, 0.1f, 0.1f)
+    sm2 += new Body(5, 90, 47, 0.1f, 0.1f)
+
+    val res = sm.combine(sm2)
   }
 
 }

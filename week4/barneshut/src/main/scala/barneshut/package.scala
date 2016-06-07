@@ -51,8 +51,8 @@ package object barneshut {
     val centerY: Float = nw.centerY + nw.size/2
     val size: Float = nw.size * 2
     val mass: Float = nw.mass + ne.mass + sw.mass + se.mass
-    val massX: Float = (nw.mass * nw.massX + ne.mass * ne.massX + sw.mass * sw.massX + se.mass * se.massX) / mass
-    val massY: Float = (nw.mass * nw.massY + ne.mass * ne.massY + sw.mass * sw.massY + se.mass * se.massY) / mass
+    val massX: Float = if(mass==0) centerX else (nw.mass * nw.massX + ne.mass * ne.massX + sw.mass * sw.massX + se.mass * se.massX) / mass
+    val massY: Float = if(mass==0) centerY else (nw.mass * nw.massY + ne.mass * ne.massY + sw.mass * sw.massY + se.mass * se.massY) / mass
 
     val total: Int = nw.total + ne.total + sw.total + se.total
 
@@ -138,13 +138,13 @@ package object barneshut {
         case Leaf(_, _, _, bodies) =>
           bodies.foreach { (b: Body) => addForce(b.mass, b.x, b.y) }
         case Fork(nw, ne, sw, se) =>
-          if(quad.size / distance(quad.massX, quad.massY, x, y) < theta){
+          if(quad.size / distance(x, y, quad.massX, quad.massY) < theta){
+            addForce(quad.mass, quad.massX, quad.massY)           
+          } else {
             traverse(nw)
             traverse(ne)
             traverse(sw)
             traverse(se)
-          } else {
-            addForce(quad.mass, quad.massX, quad.massY)
           }
           // see if node is far enough from the body,
           // or recursion is needed
@@ -171,13 +171,13 @@ package object barneshut {
 
     def trapX(value: Float): Float = {
       if(value < boundaries.minX) boundaries.minX
-      else if(value > boundaries.maxX) boundaries.maxX
+      else if(value >= boundaries.maxX) boundaries.maxX-1
       else value
     }
     
     def trapY(value: Float): Float = {
       if(value < boundaries.minY) boundaries.minY
-      else if(value > boundaries.maxY) boundaries.maxY
+      else if(value >= boundaries.maxY) boundaries.maxY-1
       else value
     }
     
@@ -203,7 +203,7 @@ package object barneshut {
     def apply(x: Int, y: Int) = matrix(y * sectorPrecision + x)
 
     def combine(that: SectorMatrix): SectorMatrix = {
-      for (i <- 0 until matrix.length) matrix(i).combine(that.matrix(i))
+      for (i <- 0 until matrix.length) matrix(i) = matrix(i).combine(that.matrix(i))
       
       this
     }
